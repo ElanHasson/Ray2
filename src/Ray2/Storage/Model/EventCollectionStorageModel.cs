@@ -15,9 +15,9 @@ namespace Ray2.Storage
         public string EventSourceName { get; }
         public string StorageTableName { get; }
         public List<EventModel> Events { get; }
-        public object GetStateId()
+        public object GetId()
         {
-            return Events.First().Event.GetStateId();
+            return Events.First().Event.GetId();
         }
     }
 }

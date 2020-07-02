@@ -87,7 +87,7 @@ namespace Ray2.EventProcess
     {
         private IEventSourcing _eventSourcing;
         private TState State;
-        private TStateKey StateId;
+        private TStateKey Id;
         private IStateStorage _stateStorage;
         private string StorageTable;
         private int exeEventCount;
@@ -96,14 +96,14 @@ namespace Ray2.EventProcess
         {
         }
 
-        public async Task<IEventProcessCore<TState, TStateKey>> Init(TStateKey stateId, EventProcessor eventProcessor)
+        public async Task<IEventProcessCore<TState, TStateKey>> Init(TStateKey id, EventProcessor eventProcessor)
         {
-            this.StateId = stateId;
+            this.Id = id;
             this._eventProcessor = eventProcessor;
             this._eventSourcing = this._serviceProvider.GetEventSourcing(this.Options.EventSourceName);
             var storageFactory = new StorageFactory(this._serviceProvider, this.Options.StatusOptions);
-            this._stateStorage = await storageFactory.GetStateStorage(this.Options.ProcessorName, StorageType.EventProcessState, this.StateId.ToString());
-            this.StorageTable = await storageFactory.GetTable(this.Options.ProcessorName, StorageType.EventProcessState, this.StateId.ToString());
+            this._stateStorage = await storageFactory.GetStateStorage(this.Options.ProcessorName, StorageType.EventProcessState, this.Id.ToString());
+            this.StorageTable = await storageFactory.GetTable(this.Options.ProcessorName, StorageType.EventProcessState, this.Id.ToString());
             this.State = await this.ReadStateAsync();
             return this;
         }
@@ -158,7 +158,7 @@ namespace Ray2.EventProcess
                     @event.Version - State.Version != events.OrderBy(w => w.Version).Count() ||
                     events.First().Version != State.NextVersion())
                 {
-                    throw new Exception($"Event version of the error,Type={GetType().FullName},StateId={this.StateId.ToString()},StateVersion={State.Version},EventVersion={@event.Version}");
+                    throw new Exception($"Event version of the error,Type={GetType().FullName},Id={this.Id.ToString()},StateVersion={State.Version},EventVersion={@event.Version}");
                 }
                 //handle events
                 foreach (var evt in events)
@@ -207,7 +207,7 @@ namespace Ray2.EventProcess
             {
                 var queryModel = new EventQueryModel(State.Version, lastEvent.Version, lastEvent.Timestamp)
                 {
-                    StateId = this.StateId
+                    Id = this.Id
                 };
                 events = await this._eventSourcing.GetListAsync(queryModel) as List<IEvent>;
                 events = events.OrderBy(f => f.Version).ToList();
@@ -246,20 +246,20 @@ namespace Ray2.EventProcess
         public async Task SaveStateAsync()
         {
             if (this.State.Version == 0)
-                await this._stateStorage.InsertAsync(this.StorageTable, this.StateId, State);
+                await this._stateStorage.InsertAsync(this.StorageTable, this.Id, State);
             else
-                await this._stateStorage.UpdateAsync(this.StorageTable, this.StateId, State);
+                await this._stateStorage.UpdateAsync(this.StorageTable, this.Id, State);
         }
         public async Task<TState> ReadStateAsync()
         {
             if (this.State != null)
                 return this.State;
-            this.State = await this._stateStorage.ReadAsync<TState>(this.StorageTable, this.StateId);
+            this.State = await this._stateStorage.ReadAsync<TState>(this.StorageTable, this.Id);
             if (this.State == null)
             {
                 this.State = new TState()
                 {
-                    StateId = this.StateId
+                    Id = this.Id
                 };
                 await this.SaveStateAsync();
             }
@@ -267,7 +267,7 @@ namespace Ray2.EventProcess
         }
         public Task ClearStateAsync()
         {
-            return this._stateStorage.DeleteAsync(this.StorageTable, this.StateId);
+            return this._stateStorage.DeleteAsync(this.StorageTable, this.Id);
         }
 
     }

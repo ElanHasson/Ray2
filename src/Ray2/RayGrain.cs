@@ -21,7 +21,7 @@ namespace Ray2
         where TState : IState<TStateKey>, new()
     {
         public TState State { get; private set; }
-        protected abstract TStateKey StateId { get; }
+        protected abstract TStateKey Id { get; }
         protected ILogger Logger { get; set; }
         private IDataflowBufferBlock<EventTransactionModel<TStateKey>> _eventBufferBlock;
         private IEventSourcing<TState, TStateKey> _eventSourcing;
@@ -45,14 +45,14 @@ namespace Ray2
                 this._eventBufferBlock = new DataflowBufferBlock<EventTransactionModel<TStateKey>>(this.TriggerEventStorage);
                 this._internalConfiguration = this.ServiceProvider.GetRequiredService<IInternalConfiguration>();
                 this._mqPublisher = this.ServiceProvider.GetRequiredService<IMQPublisher>();
-                this._eventSourcing = await this.ServiceProvider.GetEventSourcing<TState, TStateKey>(this).Init(this.StateId);
+                this._eventSourcing = await this.ServiceProvider.GetEventSourcing<TState, TStateKey>(this).Init(this.Id);
                 this.State = await this._eventSourcing.ReadSnapshotAsync();
                 this.PublishOptions = this._internalConfiguration.GetEventPublishOptions(this);
                 await base.OnActivateAsync();
             }
             catch (Exception ex)
             {
-                this.Logger.LogError(ex, $"{StateId} Activate Grain failure");
+                this.Logger.LogError(ex, $"{Id} Activate Grain failure");
                 throw ex;
             }
         }
@@ -69,30 +69,31 @@ namespace Ray2
         /// <param name="publishType">is to publish to MQ</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected async virtual Task<bool> WriteAsync(IEvent<TStateKey> @event, MQPublishType publishType = MQPublishType.Asynchronous)
+        protected virtual async Task<bool> WriteAsync(IEvent<TStateKey> @event, MQPublishType publishType = MQPublishType.Asynchronous)
         {
             if (@event == null)
-                throw new ArgumentNullException("WriteAsync event cannot be empty");
+                throw new ArgumentNullException("event");
 
             this.IsBlockProcess();
             if (this.IsBeginTransaction)
                 throw new Exception("Do not process a single event in a transaction");
 
             @event.Version = State.NextVersion();
-            @event.StateId = State.StateId;
+            @event.Id = State.Id;
             //Storage event
             if (await this._eventSourcing.SaveAsync(@event))
             {
                 try
                 {
-                    //Paly state
+                    //Player state
                     this.State.Player(@event);
                 }
-                catch (Exception ex)
+                catch
                 {
                     this.IsBlock = true;
-                    throw ex;
+                    throw;
                 }
+
                 //Publish event
                 await this.PublishEventAsync(@event, publishType);
 
@@ -103,8 +104,8 @@ namespace Ray2
                 }
                 return true;
             }
-            else
-                return false;
+
+            return false;
         }
 
         /// <summary>
@@ -117,6 +118,7 @@ namespace Ray2
         {
             if (@event == null)
                 throw new ArgumentNullException("ConcurrentWriteAsync event cannot be empty");
+            
             this.IsBlockProcess();
             var model = new EventTransactionModel<TStateKey>(@event, publishType);
             return this._eventBufferBlock.SendAsync(model);
@@ -158,7 +160,9 @@ namespace Ray2
             try
             {
                 if (@event == null)
-                    throw new ArgumentNullException("PublishEventAsync event cannot be empty");
+                {
+                    throw new ArgumentNullException("event");
+                }
                 if (this.PublishOptions != null)
                 {
                     await _mqPublisher.PublishAsync(@event, this.PublishOptions.Topic, this.PublishOptions.MQProvider, publishType);
@@ -173,6 +177,8 @@ namespace Ray2
             {
                 this.Logger.LogError(ex, $"Publish {@event.TypeCode}.V{@event.Version} event failed");
             }
+
+            return;
         }
         /// <summary>
         /// begin transaction
@@ -204,7 +210,7 @@ namespace Ray2
         {
             if (this.IsBlock)
             {
-                throw new Exception($"Event version and state version don't match!,StateId={State.StateId},Event Version={State.NextVersion()},State Version={State.Version}");
+                throw new Exception($"Event version and state version don't match!,Id={State.Id},Event Version={State.NextVersion()},State Version={State.Version}");
             }
         }
     }

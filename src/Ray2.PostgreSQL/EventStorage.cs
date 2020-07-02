@@ -27,15 +27,15 @@ namespace Ray2.PostgreSQL
             this._options = serviceProvider.GetRequiredService<IOptionsSnapshot<PostgreSqlOptions>>().Get(name);
         }
 
-        public Task<EventModel> GetAsync(string tableName, object stateId, long version)
+        public Task<EventModel> GetAsync(string tableName, object id, long version)
         {
-            var stotage = this.GetStorage(tableName, stateId);
-            return stotage.GetAsync(stateId, version);
+            var stotage = this.GetStorage(tableName, id);
+            return stotage.GetAsync(id, version);
         }
 
         public Task<List<EventModel>> GetListAsync(string tableName, EventQueryModel queryModel)
         {
-            var stotage = this.GetStorage(tableName, queryModel.StateId);
+            var stotage = this.GetStorage(tableName, queryModel.Id);
             return stotage.GetListAsync(queryModel);
         }
 
@@ -45,7 +45,7 @@ namespace Ray2.PostgreSQL
             foreach (var key in eventsList.Keys)
             {
                 var events = eventsList[key];
-                var stotage = this.GetStorage(key, events.First().Data.StateId);
+                var stotage = this.GetStorage(key, events.First().Data.Id);
                 stotage.SaveAsync(events);
             }
             return Task.CompletedTask;
@@ -53,15 +53,15 @@ namespace Ray2.PostgreSQL
 
         public Task<bool> SaveAsync(EventCollectionStorageModel events)
         {
-            var stotage = this.GetStorage(events.StorageTableName, events.GetStateId());
+            var stotage = this.GetStorage(events.StorageTableName, events.GetId());
             return stotage.SaveAsync(events);
         }
 
-        private IPostgreSqlEventStorage GetStorage(string tableName, object stateId)
+        private IPostgreSqlEventStorage GetStorage(string tableName, object id)
         {
             return storageList.GetOrAdd(tableName, (key) =>
             {
-                this._tableStorage.CreateEventTable(tableName, stateId);
+                this._tableStorage.CreateEventTable(tableName, id);
                 return new PostgreSqlEventStorage(this._serviceProvider, _options, this._providerName, key);
             });
         }

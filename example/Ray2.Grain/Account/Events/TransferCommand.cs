@@ -1,11 +1,9 @@
-﻿using System.Runtime.Serialization;
-
-namespace Ray2.Grain.Events
+﻿namespace Ray2.Grain.Account.Events
 {
-    public class AccountTransferEvent : Event<long>
+    public class TransferCommand : Event<long>
     {
-        public AccountTransferEvent() { }
-        public AccountTransferEvent(long toAccountId, decimal amount, decimal balance)
+        public TransferCommand() { }
+        public TransferCommand(long toAccountId, decimal amount, decimal balance)
         {
             ToAccountId = toAccountId;
             Amount = amount;

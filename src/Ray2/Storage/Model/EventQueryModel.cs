@@ -19,7 +19,7 @@ namespace Ray2.Storage
         {
             this.EndVersion = endVersion;
         }
-        public object StateId { get; set; }
+        public object Id { get; set; }
         public Int64 StartVersion { get; set; }
         public Int64 EndVersion { get; set; }
         public string EventTypeCode { get; set; }

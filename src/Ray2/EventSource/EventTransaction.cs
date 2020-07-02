@@ -75,7 +75,7 @@ namespace Ray2.EventSource
                 throw new ArgumentNullException("WriteEventAsync event cannot be empty");
             }
             @event.Version = State.NextVersion();
-            @event.StateId = State.StateId;
+            @event.Id = State.Id;
             var model = new EventTransactionModel<TStateKey>(@event, publishType);
             this.WriteEventAsync(model);
         }

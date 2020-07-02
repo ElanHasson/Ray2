@@ -12,14 +12,14 @@ namespace Ray2.Test.Model
         {
             return new TestEvent()
             {
-                StateId = 100,
+                Id = 100,
                 Version = v
             };
         }
 
         public void Valid(TestEvent state)
         {
-            Assert.Equal(state.StateId, this.StateId);
+            Assert.Equal(state.Id, this.Id);
             Assert.Equal(state.Version, this.Version);
             Assert.Equal(state.TypeCode, this.TypeCode);
             Assert.Equal(state.Version, this.Version);
@@ -34,7 +34,7 @@ namespace Ray2.Test.Model
         {
             return new TestEvent1()
             {
-                StateId = 100,
+                Id = 100,
                 Version = v
             };
         }

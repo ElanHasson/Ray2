@@ -4,7 +4,7 @@ namespace Ray2.Storage
 {
     public class EventStorageModel : EventModel
     {
-        public EventStorageModel(object stateId, IEvent @event, string eventSourceName, string storageTableName) :base(@event)
+        public EventStorageModel(object id, IEvent @event, string eventSourceName, string storageTableName) :base(@event)
         {
             this.EventSourceName = eventSourceName;
             this.StorageTableName = storageTableName;

@@ -22,32 +22,32 @@ namespace Ray2.PostgreSQL
             this._options = serviceProvider.GetRequiredService<IOptionsSnapshot<PostgreSqlOptions>>().Get(name);
         }
 
-        public void CreateEventTable(string name, object stateId)
+        public void CreateEventTable(string name, object id)
         {
             tableCache.GetOrAdd(name, (n) =>
             {
-                Task task = this.CreateTable(n, stateId, CreateEventTableSql);
+                Task task = this.CreateTable(n, id, CreateEventTableSql);
                 task.Wait(5000);
                 return n;
             });
         }
 
-        public void CreateStateTable(string name, object stateId)
+        public void CreateStateTable(string name, object id)
         {
             tableCache.GetOrAdd(name, (n) =>
            {
-               Task task = this.CreateTable(n, stateId, CreateStateTableSql);
+               Task task = this.CreateTable(n, id, CreateStateTableSql);
                task.Wait(5000);
                return n;
            });
         }
 
-        private async Task CreateTable(string name, object stateId, string sql)
+        private async Task CreateTable(string name, object id, string sql)
         {
             try
             {
-                int stateIdLength = this.GetStateIdLength(stateId);
-                sql = string.Format(sql, name, stateIdLength);
+                int idLength = this.GetIdLength(id);
+                sql = string.Format(sql, name, idLength);
                 using (var db = PostgreSqlDbContext.Create(this._options))
                 {
                     await db.OpenAsync();
@@ -61,21 +61,21 @@ namespace Ray2.PostgreSQL
             }
         }
 
-        private int GetStateIdLength(object stateId)
+        private int GetIdLength(object id)
         {
-            if (stateId == null)
+            if (id == null)
             {
                 return 32;
             }
-            else if (stateId.GetType() == typeof(int))
+            else if (id.GetType() == typeof(int))
             {
                 return 11;
             }
-            else if (stateId.GetType() == typeof(long))
+            else if (id.GetType() == typeof(long))
             {
                 return 20;
             }
-            else if (stateId.GetType() == typeof(string))
+            else if (id.GetType() == typeof(string))
             {
                 return 32;
             }
@@ -85,21 +85,21 @@ namespace Ray2.PostgreSQL
 
         private const string CreateStateTableSql = @"
                     CREATE TABLE IF NOT EXISTS {0}(
-                        StateId varchar({1}) NOT NULL PRIMARY KEY,
+                        Id varchar({1}) NOT NULL PRIMARY KEY,
                         DataType varchar(20) NOT NULL,  
                         Data bytea NOT NULL)";
 
         private const string CreateEventTableSql = @"
                     CREATE TABLE IF NOT EXISTS {0} (
-                        StateId varchar({1}) NOT NULL,
+                        Id varchar({1}) NOT NULL,
                         RelationEvent varchar(250)  NULL,
                         TypeCode varchar(100)  NOT NULL,
                         DataType varchar(20) NOT NULL,
                         Data bytea NOT NULL,
                         Version int8 NOT NULL,
                         AddTime int8 NOT NULL,
-                        constraint {0}_id_unique UNIQUE(StateId,TypeCode,RelationEvent)
+                        constraint {0}_id_unique UNIQUE(Id,TypeCode,RelationEvent)
                     ) WITH (OIDS=FALSE);
-                    CREATE UNIQUE INDEX IF NOT EXISTS {0}_Event_State_Version ON {0} USING btree(StateId, Version);";
+                    CREATE UNIQUE INDEX IF NOT EXISTS {0}_Event_State_Version ON {0} USING btree(Id, Version);";
     }
 }

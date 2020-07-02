@@ -19,7 +19,7 @@ namespace Ray2.EventProcess
         }
         public Task<bool> Tell(EventModel model)
         {
-            object id = model.Event.GetStateId();
+            object id = model.Event.GetId();
             IEventProcessor eventProcessor;
             if (id is Guid _guid)
             {

@@ -15,33 +15,39 @@ namespace Ray2
         {
             this.TypeCode = this.GetType().FullName;
         }
+
         /// <summary>
         /// State Id
         /// </summary>
-        public virtual TStateKey StateId { get; set; }
+        public virtual TStateKey Id { get; set; }
+
         /// <summary>
         /// State version number
         /// </summary>
-      [JsonProperty]
+        [JsonProperty]
         public virtual long Version { get; private set; } = 0;
+
         /// <summary>
         /// Event time corresponding to the status version number
         /// </summary>
         [JsonProperty]
         public virtual long VersionTime { get; private set; }
+
         /// <summary>
         /// State type fullname
         /// </summary>
         [JsonProperty]
         public virtual string TypeCode { get; }
+
         /// <summary>
         /// next version no
         /// </summary>
         /// <returns></returns>
         public long NextVersion()
         {
-            return this.Version+1;
+            return this.Version + 1;
         }
+
         /// <summary>
         /// Play event modification status
         /// </summary>
@@ -54,15 +60,17 @@ namespace Ray2
             this.Version = @event.Version;
             this.VersionTime = @event.Timestamp;
         }
+
         public void Player(IList<IEvent> events)
         {
             if (events == null || events.Count == 0)
-                return ;
+                return;
             foreach (var @event in events)
             {
-                this.Player( @event);
+                this.Player(@event);
             }
         }
+
         public void Player(IList<IEvent<TStateKey>> events)
         {
             if (events == null || events.Count == 0)
@@ -76,7 +84,12 @@ namespace Ray2
         /// <summary>
         /// Play event
         /// </summary>
-        /// <param name="@event">Event <see cref="IEvent"/></param>
-        protected abstract void PlayEvent(IEvent @event);
+        /// <param name="event">Event <see cref="IEvent"/></param>
+        protected virtual void PlayEvent(IEvent @event)
+        {
+            dynamic s = this;
+            dynamic e = @event;
+            s.Handle(e);
+        }
     }
 }

@@ -12,7 +12,7 @@ namespace Ray2.EventSource
     {
         EventSourceOptions Options { get; set; }
         Task<IList<IEvent>> GetListAsync(EventQueryModel queryModel);
-        Task ClearSnapshotAsync(string stateId);
+        Task ClearSnapshotAsync(string id);
     }
 
     /// <summary>

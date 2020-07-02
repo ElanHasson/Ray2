@@ -15,7 +15,7 @@ namespace Ray2.PostgreSQL.Test
 
         public  void  Valid(TestState state)
         {
-            Assert.Equal(state.StateId, this.StateId);
+            Assert.Equal(state.Id, this.Id);
             Assert.Equal(state.Test, this.Test);
             Assert.Equal(state.TypeCode, this.TypeCode);
             Assert.Equal(state.Version, this.Version);

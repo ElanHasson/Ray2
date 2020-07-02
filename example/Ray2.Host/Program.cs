@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Ray2.Grain;
 using Orleans;
+using Ray2.Grain.Account;
 
 namespace Ray2.Host
 {

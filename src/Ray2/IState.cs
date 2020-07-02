@@ -47,7 +47,7 @@ namespace Ray2
         /// <summary>
         /// State Id
         /// </summary>
-        TStateKey StateId { get; set; }
+        TStateKey Id { get; set; }
         /// <summary>
         /// Play event modification status
         /// </summary>

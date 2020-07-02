@@ -31,10 +31,10 @@ namespace Ray2
         /// <returns></returns>
         string GetRelationKey();
         /// <summary>
-        /// Get StateId
+        /// Get Id
         /// </summary>
         /// <returns></returns>
-        object GetStateId();
+        object GetId();
     }
     /// <summary>
     /// This is the event data interface 
@@ -44,6 +44,6 @@ namespace Ray2
         /// <summary>
         /// State Id
         /// </summary>
-        TPrimaryKey StateId { get; set; }
+        TPrimaryKey Id { get; set; }
     }
 }

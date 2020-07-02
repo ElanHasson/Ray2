@@ -9,7 +9,7 @@ namespace Ray2
     /// <summary>
     /// Event abstract class
     /// </summary>
-    /// <typeparam name="TStateKey">StateId Type</typeparam>
+    /// <typeparam name="TStateKey">Id Type</typeparam>
     public abstract class Event<TStateKey> : IEvent<TStateKey>
     {
         public Event()
@@ -28,7 +28,7 @@ namespace Ray2
         /// <summary>
         /// State Id  <see cref="IState{TStateKey}"/>  
         /// </summary>
-        public virtual TStateKey StateId { get; set; }
+        public virtual TStateKey Id { get; set; }
         /// <summary>
         ///  the version number of <see cref="IState{TStateKey}"/>  
         /// </summary>
@@ -53,19 +53,19 @@ namespace Ray2
         /// <returns></returns>
         public string GetRelationKey()
         {
-            return $"{StateId}-{TypeCode}-{Version}";
+            return $"{Id}-{TypeCode}-{Version}";
         }
         /// <summary>
-        /// Get StateId
+        /// Get Id
         /// </summary>
         /// <returns></returns>
-        public object GetStateId()
+        public object GetId()
         {
-            return this.StateId;
+            return this.Id;
         }
         public override string ToString()
         {
-            return $"TypeCode:{TypeCode},StateId:{StateId},VersionNo:{Version},Timestamp:{Timestamp}";
+            return $"TypeCode:{TypeCode},Id:{Id},VersionNo:{Version},Timestamp:{Timestamp},RelationEvent:{RelationEvent}";
         }
 
 

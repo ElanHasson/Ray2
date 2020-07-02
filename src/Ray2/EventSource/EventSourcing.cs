@@ -13,7 +13,7 @@ namespace Ray2.EventSource
     public class EventSourcing<TState, TStateKey> : EventSourcing, IEventSourcing<TState, TStateKey> where TState : IState<TStateKey>, new()
     {
         private IStorageFactory _storageFactory;
-        private TStateKey StateId;
+        private TStateKey Id;
         private IDataflowBufferBlock<EventStorageModel> _eventBufferBlock;
         private IEventStorage _eventStorage;
         private IStateStorage _snapshotStorage;
@@ -25,9 +25,9 @@ namespace Ray2.EventSource
         }
         public async Task<IEventSourcing<TState, TStateKey>> Init(TStateKey stateKey)
         {
-            this.StateId = stateKey;
+            this.Id = stateKey;
             this._storageFactory = new StorageFactory(this._serviceProvider, this.Options.StorageOptions);
-            this._eventStorage = await this._storageFactory.GetEventStorage(this.Options.EventSourceName, this.StateId.ToString());
+            this._eventStorage = await this._storageFactory.GetEventStorage(this.Options.EventSourceName, this.Id.ToString());
 
             string bufferKey = "es" + this.Options.EventSourceName + this.Options.StorageOptions.StorageProvider;
             this._eventBufferBlock = this._serviceProvider.GetRequiredService<IDataflowBufferBlockFactory>().Create<EventStorageModel>(bufferKey, this.LazySaveAsync);
@@ -36,8 +36,8 @@ namespace Ray2.EventSource
             if (this.Options.SnapshotOptions.SnapshotType != SnapshotType.NoSnapshot)
             {
                 IStorageFactory snapshotStorageFactory = new StorageFactory(this._serviceProvider, this.Options.SnapshotOptions);
-                this._snapshotStorage = await snapshotStorageFactory.GetStateStorage(this.Options.EventSourceName, StorageType.EventSourceSnapshot, this.StateId.ToString());
-                this.SnapshotTable = await snapshotStorageFactory.GetTable(this.Options.EventSourceName, StorageType.EventSourceSnapshot, this.StateId.ToString());
+                this._snapshotStorage = await snapshotStorageFactory.GetStateStorage(this.Options.EventSourceName, StorageType.EventSourceSnapshot, this.Id.ToString());
+                this.SnapshotTable = await snapshotStorageFactory.GetTable(this.Options.EventSourceName, StorageType.EventSourceSnapshot, this.Id.ToString());
             }
             return this;
         }
@@ -45,7 +45,7 @@ namespace Ray2.EventSource
         {
             //Sharding processing
             string storageTableName = await this.GetEventTableName();
-            EventStorageModel storageModel = new EventStorageModel(@event.StateId, @event, this.Options.EventSourceName, storageTableName);
+            EventStorageModel storageModel = new EventStorageModel(@event.Id, @event, this.Options.EventSourceName, storageTableName);
             return await this._eventBufferBlock.SendAsync(storageModel);
         }
         public async Task<bool> SaveAsync(IList<IEvent<TStateKey>> events)
@@ -80,12 +80,12 @@ namespace Ray2.EventSource
         }
         private async Task<string> GetEventTableName()
         {
-            return await this._storageFactory.GetTable(this.Options.EventSourceName, StorageType.EventSource, this.StateId.ToString());
+            return await this._storageFactory.GetTable(this.Options.EventSourceName, StorageType.EventSource, this.Id.ToString());
         }
         public async new Task<IList<IEvent<TStateKey>>> GetListAsync(EventQueryModel queryModel)
         {
-            queryModel.StateId = this.StateId.ToString();
-            List<string> tables = await this._storageFactory.GetTableList(this.Options.EventSourceName, StorageType.EventSource, this.StateId.ToString(), queryModel.StartTime);
+            queryModel.Id = this.Id.ToString();
+            List<string> tables = await this._storageFactory.GetTableList(this.Options.EventSourceName, StorageType.EventSource, this.Id.ToString(), queryModel.StartTime);
             List<IEvent<TStateKey>> events = new List<IEvent<TStateKey>>();
             foreach (var t in tables)
             {
@@ -103,10 +103,10 @@ namespace Ray2.EventSource
 
         public async Task<TState> ReadSnapshotAsync()
         {
-            var state = new TState { StateId = this.StateId };
+            var state = new TState { Id = this.Id };
             if (this.Options.SnapshotOptions.SnapshotType != SnapshotType.NoSnapshot)
             {
-                var st = await this._snapshotStorage.ReadAsync<TState>(this.SnapshotTable, this.StateId);
+                var st = await this._snapshotStorage.ReadAsync<TState>(this.SnapshotTable, this.Id);
                 if (st != null)
                 {
                     state = st;
@@ -134,7 +134,7 @@ namespace Ray2.EventSource
             if (this.Options.SnapshotOptions.SnapshotType == SnapshotType.NoSnapshot)
                 return;
 
-            await this._snapshotStorage.DeleteAsync(this.SnapshotTable, this.StateId);
+            await this._snapshotStorage.DeleteAsync(this.SnapshotTable, this.Id);
         }
         public async Task SaveSnapshotAsync(TState state)
         {
@@ -143,13 +143,13 @@ namespace Ray2.EventSource
             try
             {
                 if (state.Version == 0)
-                    await this._snapshotStorage.InsertAsync(this.SnapshotTable, state.StateId, state);
+                    await this._snapshotStorage.InsertAsync(this.SnapshotTable, state.Id, state);
                 else
-                    await this._snapshotStorage.UpdateAsync(this.SnapshotTable, state.StateId, state);
+                    await this._snapshotStorage.UpdateAsync(this.SnapshotTable, state.Id, state);
             }
             catch (Exception ex)
             {
-                this._logger.LogError(ex, $"SaveSnapshotAsync {nameof(TState)}:StateId= {state.StateId} failure ;");
+                this._logger.LogError(ex, $"SaveSnapshotAsync {nameof(TState)}:Id= {state.Id} failure ;");
                 return;
             }
         }
@@ -168,12 +168,12 @@ namespace Ray2.EventSource
         }
         public EventSourceOptions Options { get; set; }
 
-        public virtual async Task ClearSnapshotAsync(string stateId)
+        public virtual async Task ClearSnapshotAsync(string id)
         {
             IStorageFactory storageFactory = new StorageFactory(this._serviceProvider, Options.SnapshotOptions);
-            var storageTable = await storageFactory.GetTable(this.Options.EventSourceName, StorageType.EventSourceSnapshot, stateId);
-            var storage = await storageFactory.GetStateStorage(this.Options.EventSourceName, StorageType.EventSourceSnapshot, stateId);
-            await storage.DeleteAsync(storageTable, stateId);
+            var storageTable = await storageFactory.GetTable(this.Options.EventSourceName, StorageType.EventSourceSnapshot, id);
+            var storage = await storageFactory.GetStateStorage(this.Options.EventSourceName, StorageType.EventSourceSnapshot, id);
+            await storage.DeleteAsync(storageTable, id);
         }
 
         public virtual async Task<IList<IEvent>> GetListAsync(EventQueryModel queryModel)

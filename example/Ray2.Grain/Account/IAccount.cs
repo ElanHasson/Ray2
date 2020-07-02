@@ -1,8 +1,10 @@
-﻿using Orleans;
+﻿using System.Threading.Tasks;
+using Orleans;
 using Orleans.Concurrency;
-using System.Threading.Tasks;
+using Ray2.Grain.Account.Commands;
+using Ray2.Grain.Account.Events;
 
-namespace Ray2.Grain
+namespace Ray2.Grain.Account
 {
     public interface IAccount:IGrainWithIntegerKey
     {
@@ -19,7 +21,9 @@ namespace Ray2.Grain
         /// <param name="uniqueId">操作辨识ID(防止多次执行)</param>
         /// <returns></returns>
         [AlwaysInterleave]
-        Task<bool> AddAmount(decimal amount, string uniqueId = null);
+        Task Deposit(DepositCommand command);
+
+        Task Open(OpenAccountCommand command);
         /// <summary>
         /// 转账
         /// </summary>

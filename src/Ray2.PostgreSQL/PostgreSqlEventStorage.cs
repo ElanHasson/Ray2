@@ -43,8 +43,8 @@ namespace Ray2.PostgreSQL
             using (var db = PostgreSqlDbContext.Create(this.options))
             {
                 StringBuilder sql = new StringBuilder($"COPY (SELECT typecode,data,datatype,version FROM {tableName} WHERE version > '{query.StartVersion}'");
-                if (query.StateId != null)
-                    sql.Append($" and stateid = '{query.StateId}'");
+                if (query.Id != null)
+                    sql.Append($" and id = '{query.Id}'");
                 if (query.EndVersion > 0)
                     sql.Append($" and version <= '{query.EndVersion}'");
                 if (!string.IsNullOrEmpty(query.EventTypeCode))
@@ -74,11 +74,11 @@ namespace Ray2.PostgreSQL
             }
             return list;
         }
-        public async Task<EventModel> GetAsync(object stateId, long version)
+        public async Task<EventModel> GetAsync(object id, long version)
         {
             using (var db = PostgreSqlDbContext.Create(this.options))
             {
-                StringBuilder sql = new StringBuilder($"COPY (SELECT typecode,data,datatype FROM {tableName} WHERE stateid = '{stateId.ToString()}' and  version = '{version}' ) TO STDOUT(FORMAT BINARY)");
+                StringBuilder sql = new StringBuilder($"COPY (SELECT typecode,data,datatype FROM {tableName} WHERE id = '{id.ToString()}' and  version = '{version}' ) TO STDOUT(FORMAT BINARY)");
                 await db.OpenAsync();
                 using (var reader = db.BeginBinaryExport(sql.ToString()))
                 {
@@ -153,7 +153,7 @@ namespace Ray2.PostgreSQL
                 {
                     var data = this.GetSerializer().Serialize(e.Event);
                     writer.StartRow();
-                    writer.Write(e.StateId.ToString(), NpgsqlDbType.Varchar);
+                    writer.Write(e.Id.ToString(), NpgsqlDbType.Varchar);
                     writer.Write(e.Event.RelationEvent, NpgsqlDbType.Varchar);
                     writer.Write(e.Event.TypeCode, NpgsqlDbType.Varchar);
                     writer.Write(data, NpgsqlDbType.Bytea);
@@ -179,7 +179,7 @@ namespace Ray2.PostgreSQL
 
                         wrap.Data.Result = await db.ExecuteAsync(this.insertSql, new
                         {
-                            StateId = model.StateId,
+                            Id = model.Id,
                             RelationEvent = model.Event.RelationEvent,
                             TypeCode = model.Event.TypeCode,
                             Data = data,
@@ -210,8 +210,8 @@ namespace Ray2.PostgreSQL
         }
         private void BuildSql(string tableName)
         {
-            this.insertSql = $"INSERT INTO {tableName}(StateId,RelationEvent,TypeCode,Data,DataType,Version,AddTime) VALUES(@StateId,@RelationEvent,@TypeCode,@Data,@DataType,@Version,@AddTime) ON CONFLICT ON CONSTRAINT {tableName}_id_unique DO NOTHING";
-            this.insertBinarySql = $"COPY {tableName}(StateId,RelationEvent,TypeCode,Data,DataType,Version,AddTime) FROM STDIN (FORMAT BINARY)";
+            this.insertSql = $"INSERT INTO {tableName}(Id,RelationEvent,TypeCode,Data,DataType,Version,AddTime) VALUES(@Id,@RelationEvent,@TypeCode,@Data,@DataType,@Version,@AddTime) ON CONFLICT ON CONSTRAINT {tableName}_id_unique DO NOTHING";
+            this.insertBinarySql = $"COPY {tableName}(Id,RelationEvent,TypeCode,Data,DataType,Version,AddTime) FROM STDIN (FORMAT BINARY)";
         }
     }
 }

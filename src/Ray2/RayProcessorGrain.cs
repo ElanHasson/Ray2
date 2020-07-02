@@ -19,12 +19,12 @@ namespace Ray2
             get { return _eventProcessCore.ReadStateAsync().GetAwaiter().GetResult(); }
         }
 
-        protected abstract TStateKey StateId { get; }
+        protected abstract TStateKey Id { get; }
 
         public override async Task OnActivateAsync()
         {
             this._eventProcessCore = await this.ServiceProvider.GetEventProcessCore<TState, TStateKey>(this)
-                .Init(this.StateId, this.OnEventProcessing);
+                .Init(this.Id, this.OnEventProcessing);
             await base.OnActivateAsync();
         }
 
@@ -40,7 +40,12 @@ namespace Ray2
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract Task OnEventProcessing(IEvent @event);
+        public virtual Task OnEventProcessing(IEvent @event)
+        {
+            dynamic s = this;
+            dynamic e = @event;
+            return s.Apply(e);
+        }
     }
 
     public abstract class RayProcessorGrain<TStateKey> : RayProcessorGrain<EventProcessState<TStateKey>, TStateKey>

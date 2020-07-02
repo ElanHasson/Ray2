@@ -24,37 +24,37 @@ namespace Ray2.PostgreSQL.Test
         {
             TestState state = new TestState()
             {
-                StateId = 1,
+                Id = 1,
                 Test = DateTime.Now.Ticks.ToString()
             };
-            this.When(f => f.WhenInsert(state.StateId, state))
-                .When(f => f.WhenUpdate(state.StateId, state))
-                .When(f => f.WhenSelect(state.StateId, false))
-                .When(f => f.WhenDelete(state.StateId))
-                .When(f => f.WhenSelect(state.StateId, true))
+            this.When(f => f.WhenInsert(state.Id, state))
+                .When(f => f.WhenUpdate(state.Id, state))
+                .When(f => f.WhenSelect(state.Id, false))
+                .When(f => f.WhenDelete(state.Id))
+                .When(f => f.WhenSelect(state.Id, true))
                 .Then(f => f.ThenSuccess(state))
                 .BDDfy();
         }
 
-        private void WhenDelete(object stateId)
+        private void WhenDelete(object id)
         {
-            container.DeleteAsync(TableName, stateId).GetAwaiter().GetResult();
+            container.DeleteAsync(TableName, id).GetAwaiter().GetResult();
         }
-        private void WhenInsert(object stateId, TestState state)
+        private void WhenInsert(object id, TestState state)
         {
-            container.InsertAsync(TableName, stateId, state).GetAwaiter().GetResult();
+            container.InsertAsync(TableName, id, state).GetAwaiter().GetResult();
         }
-        private void WhenUpdate(object stateId, TestState state)
+        private void WhenUpdate(object id, TestState state)
         {
             state.Test = "abc";
-            container.UpdateAsync(TableName, stateId, state).GetAwaiter().GetResult();
+            container.UpdateAsync(TableName, id, state).GetAwaiter().GetResult();
         }
-        private void WhenSelect(object stateId, bool isdelete)
+        private void WhenSelect(object id, bool isDelete)
         {
-            if (isdelete)
-                deleteState = container.ReadAsync<TestState>(TableName, stateId).GetAwaiter().GetResult();
+            if (isDelete)
+                deleteState = container.ReadAsync<TestState>(TableName, id).GetAwaiter().GetResult();
             else
-                selectState = container.ReadAsync<TestState>(TableName, stateId).GetAwaiter().GetResult();
+                selectState = container.ReadAsync<TestState>(TableName, id).GetAwaiter().GetResult();
         }
 
         private void ThenSuccess(TestState state)

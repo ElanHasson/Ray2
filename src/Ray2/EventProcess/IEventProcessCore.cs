@@ -17,7 +17,7 @@ namespace Ray2.EventProcess
     public interface IEventProcessCore<TState, TStateKey> : IEventProcessCore
     where TState : IState<TStateKey>, new()
     {
-        Task<IEventProcessCore<TState, TStateKey>> Init(TStateKey stateKey, EventProcessor eventProcessor);
+        Task<IEventProcessCore<TState, TStateKey>> Init(TStateKey id, EventProcessor eventProcessor);
         Task SaveStateAsync();
         Task<TState> ReadStateAsync();
         Task ClearStateAsync();
