@@ -43,11 +43,12 @@ namespace Ray2.Host
                 .UseLocalhostClustering()
                 .UseRay(build =>
                 {
+
                     build.AddRabbitMQ("rabbitmq", opt =>
                     {
-                        opt.HostName = "192.168.1.250";
-                        opt.UserName = "admin";
-                        opt.Password = "admin";
+                        opt.HostName = "127.0.0.1";
+                        opt.UserName = "guest";
+                        opt.Password = "guest";
                     });
                     build.AddPostgreSQL("postgresql", opt =>
                      {

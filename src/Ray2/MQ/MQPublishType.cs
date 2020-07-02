@@ -13,10 +13,12 @@ namespace Ray2.MQ
         /// Can know if the publish to MQ is successful
         /// </summary>
         Synchronous,
+
         /// <summary>
         /// After the publish, I will hand it over to Ray. I don’t know if it is successful to publish to MQ.
         /// </summary>
         Asynchronous,
+
         /// <summary>
         /// not publish MQ
         /// </summary>

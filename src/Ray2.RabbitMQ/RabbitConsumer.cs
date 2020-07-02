@@ -89,7 +89,11 @@ namespace Ray2.RabbitMQ
             {
                 await Process(ea);
             };
-            basicConsumer.ConsumerTag = this._channel.Model.BasicConsume(this.Queue, options.AutoAck, basicConsumer);
+
+            basicConsumer
+                .HandleBasicConsumeOk(this._channel.Model.BasicConsume(this.Queue, options.AutoAck,
+                basicConsumer));
+        
             return Task.CompletedTask;
         }
       
@@ -102,7 +106,7 @@ namespace Ray2.RabbitMQ
         }
         public async Task Process(BasicDeliverEventArgs e)
         {
-            var model = this.ConversionEvent(e.Body);
+            var model = this.ConversionEvent(e.Body.ToArray());
             if (model != null)
             {
                 await this.Process(model, 0);

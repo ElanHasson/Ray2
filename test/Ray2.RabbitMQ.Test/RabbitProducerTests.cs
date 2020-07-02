@@ -88,7 +88,7 @@ namespace Ray2.RabbitMQ.Test
             consumer.Received += (ch, ea) =>
             {
                 channel.BasicAck(ea.DeliveryTag, false);
-                message = serializer.Deserialize<PublishMessage>(ea.Body);
+                message = serializer.Deserialize<PublishMessage>(ea.Body.ToArray());
             };
         }
 
