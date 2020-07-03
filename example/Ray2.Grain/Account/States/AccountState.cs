@@ -5,14 +5,19 @@ namespace Ray2.Grain.Account.States
 {
     public class AccountState : State<long>
     {
-        public void Handle(DepositedEvent evt)
+        public void Handle(DepositedEvent @event)
         {
-            this.Balance += evt.Amount;
+            this.Balance += @event.Amount;
         }
 
-        public void Handle(AccountOpenedEvent evt)
+        public void Handle(AccountOpenedEvent @event)
         {
             this.Status = Status.Open;
+        }
+
+        public void Handle(TransferredEvent @event)
+        {
+            this.Balance -= @event.Amount;
         }
 
         public decimal Balance { get; set; }

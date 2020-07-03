@@ -10,21 +10,26 @@ namespace Ray2.Grain.Account.Processors
     public class AccountFlow : RayProcessorGrain<AccountState, long>
     {
         private readonly ILogger logger;
+        private readonly IGrainFactory _grainFactory;
 
-        public AccountFlow(ILogger<AccountFlow> logger)
+        public AccountFlow(ILogger<AccountFlow> logger, IGrainFactory grainFactory)
         {
             this.logger = logger;
+            _grainFactory = grainFactory;
         }
 
         protected override long Id => this.GetPrimaryKeyLong();
 
 
-        public async Task Apply(TransferCommand evt)
+        public async Task Apply(TransferredEvent evt)
         {
-
-            var toActor = GrainFactory.GetGrain<IAccount>(evt.ToAccountId);
-            await toActor.Transfer(evt.ToAccountId, evt.Amount);
+            var targetAccount = this.GrainFactory.GetGrain<IAccount>(evt.DestinationAccountId);
+            await targetAccount.Deposit(new DepositCommand(evt.Amount)
+            {
+                RelationEvent = evt.GetRelationKey()
+            });
         }
+
         public Task Apply(AccountOpenedEvent evt)
         {
             //this.logger.LogError($"加款：{evt.Amount}; 余额：{evt.Balance}");

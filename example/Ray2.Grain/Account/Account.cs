@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Ray2.Grain.Account.Commands;
@@ -25,7 +26,7 @@ namespace Ray2.Grain.Account
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public Task Open(OpenAccountCommand command)
+        public async Task Open(OpenAccountCommand command)
         {
             /*
              * 1. Validate command upon it's own merits (required fields present, version is still allowed, etc)
@@ -44,7 +45,10 @@ namespace Ray2.Grain.Account
                 throw new CannotOpenAClosedAccount();
             }
             
-            return this.WriteAsync(new AccountOpenedEvent(), MQ.MQPublishType.Asynchronous);
+            await this.WriteAsync(new AccountOpenedEvent()
+            {
+                RelationEvent = Guid.NewGuid().ToString("D")
+            }, MQ.MQPublishType.Asynchronous);
         }
 
         private bool IsOpen()
@@ -61,14 +65,17 @@ namespace Ray2.Grain.Account
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public  Task Deposit(DepositCommand command)
+        public async Task Deposit(DepositCommand command)
         {
             if (this.IsClosed())
             {
                 throw new UnableToDepositToClosedAccountException();
             }
 
-            return  this.ConcurrentWriteAsync(new DepositedEvent(command.Amount), MQ.MQPublishType.Asynchronous);
+            await this.ConcurrentWriteAsync(new DepositedEvent(command.Amount)
+            {
+                RelationEvent = Guid.NewGuid().ToString("D")
+            }, MQ.MQPublishType.Asynchronous);
         }
 
         public Task<decimal> GetBalance()
@@ -76,11 +83,22 @@ namespace Ray2.Grain.Account
             return Task.FromResult(State.Balance);
         }
 
-        public Task Transfer(long toAccountId, decimal amount)
+        public async Task Transfer(TransferCommand command)
         {
-            var evt = new TransferCommand(toAccountId, amount, State.Balance - amount);
-            evt.RelationEvent = evt.GetRelationKey();
-            return base.WriteAsync(evt);
+            if (!this.IsOpen())
+            {
+                throw new UnableToTransferFromAClosedAccountException();
+            }
+
+            if (this.State.Balance < command.Amount)
+            {
+                throw new InsufficientFundsException();
+            }
+
+            await this.WriteAsync(new TransferredEvent(command.ToAccountId, command.Amount)
+            {
+                RelationEvent =  command.GetRelationKey()
+            });
         }
     }
 }

@@ -30,6 +30,6 @@ namespace Ray2.Grain.Account
         /// <param name="toAccountId">目标账户ID</param>
         /// <param name="amount">转账金额</param>
         /// <returns></returns>
-        Task Transfer(long toAccountId, decimal amount);
+        Task Transfer(TransferCommand command);
     }
 }
