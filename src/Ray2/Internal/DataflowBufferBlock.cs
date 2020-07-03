@@ -2,13 +2,17 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Orleans;
 
 namespace Ray2.Internal
 {
     public class DataflowBufferBlock<TData> : IDataflowBufferBlock<TData>
     {
         private int isProcessing = 0;
-        private readonly BufferBlock<IDataflowBufferWrap<TData>> dataflowChannel = new BufferBlock<IDataflowBufferWrap<TData>>();
+        private readonly BufferBlock<IDataflowBufferWrap<TData>> dataflowChannel = new BufferBlock<IDataflowBufferWrap<TData>>(new ExecutionDataflowBlockOptions()
+        {
+            TaskScheduler = TaskScheduler.Current
+        });
         private readonly Func<BufferBlock<IDataflowBufferWrap<TData>>, Task> processor;
 
         public int Count => dataflowChannel.Count;
@@ -30,22 +34,30 @@ namespace Ray2.Internal
                         return false;
                     }
                 }
+
                 if (isProcessing == 0)
+                {
                     TriggerProcessor();
+                }
+
                 if (!isWallHandle)
+                {
                     return true;
+                }
+
                 //Determine if you need to wait for processing
                 return await wrap.Wall();
             });
+
         }
         public Task<bool> SendAsync(TData data)
         {
             return this.SendAsync(data, true);
         }
 
-        public async void TriggerProcessor()
+        public async Task TriggerProcessor()
         {
-            await Task.Run(async () =>
+            await Task.Factory.StartNew(async () =>
             {
                 if (Interlocked.CompareExchange(ref isProcessing, 1, 0) == 1)
                     return;
@@ -60,7 +72,7 @@ namespace Ray2.Internal
                 {
                     Interlocked.Exchange(ref isProcessing, 0);
                 }
-            });
+            },CancellationToken.None,TaskCreationOptions.None,TaskScheduler.Current);
 
         }
 

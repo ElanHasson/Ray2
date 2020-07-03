@@ -2,6 +2,7 @@
 using Ray2.EventProcess;
 using Ray2.EventSource;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ray2
@@ -23,10 +24,13 @@ namespace Ray2
 
         public override async Task OnActivateAsync()
         {
+            this.OrleansScheduler = TaskScheduler.Current;
             this._eventProcessCore = await this.ServiceProvider.GetEventProcessCore<TState, TStateKey>(this)
                 .Init(this.Id, this.OnEventProcessing);
             await base.OnActivateAsync();
         }
+
+        protected TaskScheduler OrleansScheduler { get; set; }
 
         public override async Task OnDeactivateAsync()
         {
@@ -42,9 +46,14 @@ namespace Ray2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual Task OnEventProcessing(IEvent @event)
         {
-            dynamic s = this;
-            dynamic e = @event;
-            return s.Apply(e);
+            return Task.Factory.StartNew<Task>(() =>
+            {
+                dynamic s = this;
+                dynamic e = @event;
+                return s.Apply(e);
+            },
+                CancellationToken.None, 
+                TaskCreationOptions.None, this.OrleansScheduler).Unwrap();
         }
     }
 
