@@ -76,27 +76,30 @@ namespace Ray2.RabbitMQ
             this.Processor = processor;
             this.Options = options;
 
-            //Subscription processing
-            this._channel.Model.ExchangeDeclare(this.Exchange, ExchangeType.Direct, true);
-            this._channel.Model.QueueDeclare(this.Queue, true, false, false, null);
-            this._channel.Model.QueueBind(this.Queue, this.Exchange, this.Exchange);
-            this._channel.Model.BasicQos(0, options.OneFetchCount, false);
-            this._channel.Model.CallbackException += Channel_CallbackException;
-
-            //Consumer reports in the channel
-            var basicConsumer = new EventingBasicConsumer(this._channel.Model);
-            basicConsumer.Received += async (ch, ea) =>
+            lock (this._channel)
             {
-                await Process(ea);
-            };
+                //Subscription processing
+                this._channel.Model.ExchangeDeclare(this.Exchange, ExchangeType.Direct, true);
+                this._channel.Model.QueueDeclare(this.Queue, true, false, false, null);
+                this._channel.Model.QueueBind(this.Queue, this.Exchange, this.Exchange);
+                this._channel.Model.BasicQos(0, options.OneFetchCount, false);
+                this._channel.Model.CallbackException += Channel_CallbackException;
 
-            basicConsumer
-                .HandleBasicConsumeOk(this._channel.Model.BasicConsume(this.Queue, options.AutoAck,
-                basicConsumer));
-        
+                //Consumer reports in the channel
+                var basicConsumer = new EventingBasicConsumer(this._channel.Model);
+                basicConsumer.Received += async (ch, ea) =>
+                {
+                    await Process(ea);
+                };
+
+                basicConsumer
+                       .HandleBasicConsumeOk(this._channel.Model.BasicConsume(this.Queue, options.AutoAck,
+                       basicConsumer));
+            }
+
             return Task.CompletedTask;
         }
-      
+
 
         public void Channel_CallbackException(object sender, CallbackExceptionEventArgs e)
         {
@@ -129,7 +132,7 @@ namespace Ray2.RabbitMQ
             {
                 if (count > 0)
                     await Task.Delay(count * 1000);
-               
+
                 await this.Processor.Tell(model);
             }
             catch (Exception ex)
