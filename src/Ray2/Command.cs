@@ -2,7 +2,7 @@
 
 namespace Ray2
 {
-    public abstract class Command<TStateKey> : Event<TStateKey>, ICommand, ICommand<TStateKey>
+    public abstract class Command<TStateKey> : Event<TStateKey>, ICommand
     {
         public Command()
         {
@@ -12,9 +12,9 @@ namespace Ray2
         public Command(Guid commandId):this(commandId.ToString("N"))
         {
         }
-        public Command(string commandId)
+        public Command(string correlationId)
         {
-            RelationEvent = commandId;
+            RelationEvent = correlationId;
         }
 
     }
@@ -23,8 +23,4 @@ namespace Ray2
     {
     }
 
-    public interface ICommand<TStateKey>
-    {
-
-    }
 }
