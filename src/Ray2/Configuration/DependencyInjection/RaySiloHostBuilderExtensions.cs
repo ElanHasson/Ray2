@@ -14,7 +14,6 @@ namespace Orleans.Hosting
         /// Use Ray
         /// </summary>
         /// <param name="hostBuilder"><see cref="ISiloHostBuilder"/></param>
-        /// <param name="configuration">Ray and Ray module configuration</param>
         /// <param name="builder">Provide a action for building Ray</param>
         /// <returns></returns>
         public static ISiloHostBuilder UseRay(this ISiloHostBuilder hostBuilder, Action<IRayBuilder> builder)
@@ -24,7 +23,6 @@ namespace Orleans.Hosting
 
                 services.AddRay(build.Configuration, builder);
             });
-            hostBuilder.EnableDirectClient();
             hostBuilder.AddStartupTask((sp,cancellationToken)=>
             {
                 return sp.GetRequiredService<IMQSubscriber>().Start();
