@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -28,25 +28,25 @@ namespace Ray2
         /// <summary>
         /// State Id  <see cref="IState{TStateKey}"/>  
         /// </summary>
-        public virtual TStateKey Id { get; set; }
+        public TStateKey Id { get; set; }
         /// <summary>
         ///  the version number of <see cref="IState{TStateKey}"/>  
         /// </summary>
-        public virtual long Version { get; set; }
+        public long Version { get; set; }
         /// <summary>
         ///  Event release timestamp
         /// </summary>
         [JsonProperty]
-        public virtual long Timestamp { get; private set; }
+        public long Timestamp { get; private set; }
         /// <summary>
         /// Event type fullname
         /// </summary>
         [JsonProperty]
-        public virtual string TypeCode { get; private set; }
+        public string TypeCode { get; private set; }
         /// <summary>
         /// Relation Event
         /// </summary>
-        public virtual string RelationEvent { get;  set; }
+        public string RelationEvent { get;  set; }
         /// <summary>
         ///  Generate Relation key
         /// </summary>
