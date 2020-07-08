@@ -20,7 +20,7 @@ namespace Ray2.RabbitMQ
         {
             this._serviceProvider = serviceProvider;
             this._logger = serviceProvider.GetRequiredService<ILogger<RabbitChannelFactory>>();
-            this.Options = serviceProvider.GetRequiredService<IOptionsSnapshot<RabbitOptions>>().Get(providerName);
+            this.Options = serviceProvider.GetRequiredService<IOptionsMonitor<RabbitOptions>>().Get(providerName);
             this.RemainderCount = this.Options.ConnectionPoolCount > 0 ? this.Options.ConnectionPoolCount : 10;
         }
 

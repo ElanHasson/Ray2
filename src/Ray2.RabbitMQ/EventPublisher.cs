@@ -28,7 +28,7 @@ namespace Ray2.RabbitMQ
             this.providerName = providerName;
             this._serviceProvider = serviceProvider;
             this._logger = this._serviceProvider.GetRequiredService<ILogger<EventPublisher>>();
-            this._options = serviceProvider.GetRequiredService<IOptionsSnapshot<RabbitOptions>>().Get(providerName);
+            this._options = serviceProvider.GetRequiredService<IOptionsMonitor<RabbitOptions>>().Get(providerName);
             this._serializer = this._serviceProvider.GetRequiredServiceByName<ISerializer>(_options.SerializationType);
             this.MaxChannelCount = this._options.ConnectionPoolCount * 20;//20 channels per connection pool
         }

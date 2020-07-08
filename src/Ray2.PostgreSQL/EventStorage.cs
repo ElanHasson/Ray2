@@ -24,7 +24,7 @@ namespace Ray2.PostgreSQL
             this._providerName = name;
             this._serviceProvider = serviceProvider;
             this._tableStorage = serviceProvider.GetRequiredServiceByName<IPostgreSqlTableStorage>(name);
-            this._options = serviceProvider.GetRequiredService<IOptionsSnapshot<PostgreSqlOptions>>().Get(name);
+            this._options = serviceProvider.GetRequiredService<IOptionsMonitor<PostgreSqlOptions>>().Get(name);
         }
 
         public Task<EventModel> GetAsync(string tableName, object id, long version)

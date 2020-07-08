@@ -26,7 +26,7 @@ namespace Ray2.PostgreSQL
             this.providerName = name;
             this.tableName = tableName;
             this._serviceProvider = serviceProvider;
-            this._options = serviceProvider.GetRequiredService<IOptionsSnapshot<PostgreSqlOptions>>().Get(name);
+            this._options = serviceProvider.GetRequiredService<IOptionsMonitor<PostgreSqlOptions>>().Get(name);
             this._logger = serviceProvider.GetRequiredService<ILogger<PostgreSqlStateStorage>>();
             this.BuildSql(tableName);
         }

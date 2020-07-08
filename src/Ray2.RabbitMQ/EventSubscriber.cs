@@ -29,7 +29,7 @@ namespace Ray2.RabbitMQ
             this.providerName = providerName;
             this._serviceProvider = serviceProvider;
             this._logger = this._serviceProvider.GetRequiredService<ILogger<EventSubscriber>>();
-            this._options = serviceProvider.GetRequiredService<IOptionsSnapshot<RabbitOptions>>().Get(providerName);
+            this._options = serviceProvider.GetRequiredService<IOptionsMonitor<RabbitOptions>>().Get(providerName);
             this._eventProcessorFactory = serviceProvider.GetRequiredService<IEventProcessorFactory>();
             this._serializer = this._serviceProvider.GetRequiredServiceByName<ISerializer>(_options.SerializationType);
             var _channelFactory = serviceProvider.GetRequiredServiceByName<IRabbitChannelFactory>(this.providerName);

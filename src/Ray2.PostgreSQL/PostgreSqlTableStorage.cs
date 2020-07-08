@@ -19,7 +19,7 @@ namespace Ray2.PostgreSQL
             this.ProviderName = name;
             this._serviceProvider = serviceProvider;
             this._logger = serviceProvider.GetRequiredService<ILogger<PostgreSqlTableStorage>>();
-            this._options = serviceProvider.GetRequiredService<IOptionsSnapshot<PostgreSqlOptions>>().Get(name);
+            this._options = serviceProvider.GetRequiredService<IOptionsMonitor<PostgreSqlOptions>>().Get(name);
         }
 
         public void CreateEventTable(string name, object id)
