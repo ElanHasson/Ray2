@@ -31,6 +31,26 @@ namespace Orleans.Hosting
         }
 
         /// <summary>
+        /// Use Ray
+        /// </summary>
+        /// <param name="siloBuilder"><see cref="ISiloBuilder"/></param>
+        /// <param name="builder">Provide a action for building Ray</param>
+        /// <returns></returns>
+        public static ISiloBuilder UseRay(this ISiloBuilder siloBuilder, Action<IRayBuilder> builder)
+        {
+            siloBuilder.ConfigureServices((context, services) => {
+
+                services.AddRay(context.Configuration, builder);
+            });
+
+            siloBuilder.AddStartupTask((sp, cancellationToken) =>
+            {
+                return sp.GetRequiredService<IMQSubscriber>().Start();
+            });
+            return siloBuilder;
+        }
+
+        /// <summary>
         /// Add Ray
         /// </summary>
         /// <param name="services"><see cref="IServiceCollection"/></param>
