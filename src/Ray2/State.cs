@@ -87,9 +87,10 @@ namespace Ray2
         /// <param name="event">Event <see cref="IEvent"/></param>
         protected virtual void PlayEvent(IEvent @event)
         {
+            //TODO: Switch to a method cache via reflection instead of dynamic dispatch
             dynamic s = this;
             dynamic e = @event;
-            s.Handle(e);
+            s.Apply(e);
         }
     }
 }

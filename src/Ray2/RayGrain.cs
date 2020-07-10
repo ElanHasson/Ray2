@@ -123,6 +123,7 @@ namespace Ray2
             var model = new EventTransactionModel<TStateKey>(@event, publishType);
             return this._eventBufferBlock.SendAsync(model);
         }
+
         private Task TriggerEventStorage(BufferBlock<IDataflowBufferWrap<EventTransactionModel<TStateKey>>> eventBuffer)
         {
             var transaction = this.BeginTransaction();
